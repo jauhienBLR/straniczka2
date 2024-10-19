@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Input with Circles</title>
+<style>
+body {
+display: flex;
+justify-content: center;
+}
+form {
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+.list-item {
+display: flex;
+align-items: center;
+margin-bottom: 10px;
+}
+input[type="text"] {
+margin-right: 10px;
+padding: 5px;
+width: 200px;
+}
+.circle {
+width: 50px;
+height: 50px;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+margin-left: 10px;
+cursor: pointer;
+color: white;
+font-weight: bold;
+border: 2px solid black;
+background-color: hsl(240, 100%, 50%); /* Начальный холодный цвет */
+}
+</style>
+</head>
+<body>
+<form id="word-form">
+<div class="list-item">
+<input type="text" placeholder="Введите слово" name="word1">
+<div class="circle" data-name="circle1-1" data-value="0">0</div>
+<div class="circle" data-name="circle1-2" data-value="0">0</div>
+</div>
+<div class="list-item">
+<input type="text" placeholder="Введите слово" name="word2">
+<div class="circle" data-name="circle2-1" data-value="0">0</div>
+<div class="circle" data-name="circle2-2" data-value="0">0</div>
+</div>
+<div class="list-item">
+<input type="text" placeholder="Введите слово" name="word3">
+<div class="circle" data-name="circle3-1" data-value="0">0</div>
+<div class="circle" data-name="circle3-2" data-value="0">0</div>
+</div>
+</form>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+const inputs = document.querySelectorAll('input[type="text"]');
+inputs.forEach(input => {
+const savedValue = localStorage.getItem(input.name);
+if (savedValue) {
+input.value = savedValue;
+}
+input.addEventListener('input', function() {
+localStorage.setItem(input.name, input.value);
+});
+});
+
+function updateCircleColor(circle, value) {
+const hue = 240 - (value * 24); // Градиент от синего (240) до красного (0)
+circle.style.backgroundColor = `hsl(${hue}, 100%, 50%)`;
+circle.textContent = value;
+}
+
+document.querySelectorAll('.circle').forEach(circle => {
+const savedValue = localStorage.getItem(circle.getAttribute('data-name'));
+if (savedValue) {
+const value = parseFloat(savedValue);
+circle.setAttribute('data-value', value);
+updateCircleColor(circle, value);
+}
+circle.addEventListener('click', function() {
+let value = parseFloat(this.getAttribute('data-value'));
+value = (value + 0.5) % 11; // Увеличение значения с шагом 0.5 до 10
+if (value > 10) value = 0; // Ограничение значения от 0 до 10
+this.setAttribute('data-value', value);
+localStorage.setItem(this.getAttribute('data-name'), value);
+updateCircleColor(this, value);
+});
+});
+});
+</script>
+</body>
+</html>
