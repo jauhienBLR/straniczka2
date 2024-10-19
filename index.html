@@ -38,25 +38,46 @@ font-weight: bold;
 border: 2px solid black;
 background-color: hsl(240, 100%, 50%); /* Начальный холодный цвет */
 }
+.circle span {
+text-shadow: 1px 1px 2px black;
+}
+button.delete-row, button.duplicate-row {
+margin-left: 10px;
+padding: 5px;
+border: none;
+background-color: red;
+color: white;
+cursor: pointer;
+}
+button.duplicate-row {
+background-color: green;
+}
 </style>
 </head>
 <body>
 <form id="word-form">
 <div class="list-item">
 <input type="text" placeholder="Введите слово" name="word1">
-<div class="circle" data-name="circle1-1" data-value="0">0</div>
-<div class="circle" data-name="circle1-2" data-value="0">0</div>
+<div class="circle" data-name="circle1-1" data-value="0"><span>0</span></div>
+<div class="circle" data-name="circle1-2" data-value="0"><span>0</span></div>
+<button type="button" class="delete-row">Удалить</button>
+<button type="button" class="duplicate-row">Дублировать</button>
 </div>
 <div class="list-item">
 <input type="text" placeholder="Введите слово" name="word2">
-<div class="circle" data-name="circle2-1" data-value="0">0</div>
-<div class="circle" data-name="circle2-2" data-value="0">0</div>
+<div class="circle" data-name="circle2-1" data-value="0"><span>0</span></div>
+<div class="circle" data-name="circle2-2" data-value="0"><span>0</span></div>
+<button type="button" class="delete-row">Удалить</button>
+<button type="button" class="duplicate-row">Дублировать</button>
 </div>
 <div class="list-item">
 <input type="text" placeholder="Введите слово" name="word3">
-<div class="circle" data-name="circle3-1" data-value="0">0</div>
-<div class="circle" data-name="circle3-2" data-value="0">0</div>
+<div class="circle" data-name="circle3-1" data-value="0"><span>0</span></div>
+<div class="circle" data-name="circle3-2" data-value="0"><span>0</span></div>
+<button type="button" class="delete-row">Удалить</button>
+<button type="button" class="duplicate-row">Дублировать</button>
 </div>
+<button type="button" id="add-row">Добавить строку</button>
 </form>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -74,23 +95,114 @@ localStorage.setItem(input.name, input.value);
 function updateCircleColor(circle, value) {
 const hue = 240 - (value * 24); // Градиент от синего (240) до красного (0)
 circle.style.backgroundColor = `hsl(${hue}, 100%, 50%)`;
-circle.textContent = value;
+circle.innerHTML = `<span>${value}</span>`;
 }
 
-document.querySelectorAll('.circle').forEach(circle => {
-const savedValue = localStorage.getItem(circle.getAttribute('data-name'));
-if (savedValue) {
-const value = parseFloat(savedValue);
-circle.setAttribute('data-value', value);
-updateCircleColor(circle, value);
+function createListItem(word, wordValue, circle1Value, circle2Value) {
+const listItem = document.createElement('div');
+listItem.className = 'list-item';
+
+const input = document.createElement('input');
+input.type = 'text';
+input.placeholder = 'Введите слово';
+input.value = wordValue;
+input.name = word;
+input.addEventListener('input', function() {
+localStorage.setItem(input.name, input.value);
+});
+listItem.appendChild(input);
+
+const circle1 = document.createElement('div');
+circle1.className = 'circle';
+circle1.innerHTML = `<span>${circle1Value}</span>`;
+circle1.setAttribute('data-value', circle1Value);
+circle1.setAttribute('data-name', `circle-${word}-1`);
+circle1.addEventListener('click', function() {
+let value = parseFloat(circle1.getAttribute('data-value'));
+value = (value + 0.5) % 11;
+if (value > 10) value = 0;
+circle1.setAttribute('data-value', value);
+localStorage.setItem(circle1.getAttribute('data-name'), value);
+updateCircleColor(circle1, value);
+});
+listItem.appendChild(circle1);
+
+const circle2 = document.createElement('div');
+circle2.className = 'circle';
+circle2.innerHTML = `<span>${circle2Value}</span>`;
+circle2.setAttribute('data-value', circle2Value);
+circle2.setAttribute('data-name', `circle-${word}-2`);
+circle2.addEventListener('click', function() {
+let value = parseFloat(circle2.getAttribute('data-value'));
+value = (value + 0.5) % 11;
+if (value > 10) value = 0;
+circle2.setAttribute('data-value', value);
+localStorage.setItem(circle2.getAttribute('data-name'), value);
+updateCircleColor(circle2, value);
+});
+listItem.appendChild(circle2);
+
+const deleteButton = document.createElement('button');
+deleteButton.className = 'delete-row';
+deleteButton.textContent = 'Удалить';
+deleteButton.addEventListener('click', function() {
+listItem.remove();
+const currentItems = JSON.parse(localStorage.getItem('list-items')) || [];
+const updatedItems = currentItems.filter(item => item.word !== word);
+localStorage.setItem('list-items', JSON.stringify(updatedItems));
+});
+listItem.appendChild(deleteButton);
+
+const duplicateButton = document.createElement('button');
+duplicateButton.className = 'duplicate-row';
+duplicateButton.textContent = 'Дублировать';
+duplicateButton.addEventListener('click', function() {
+const newWord = `word-${document.querySelectorAll('.list-item').length + 1}`;
+const newListItem = createListItem(newWord, input.value, parseFloat(circle1.getAttribute('data-value')), parseFloat(circle2.getAttribute('data-value')));
+document.getElementById('word-form').insertBefore(newListItem, document.getElementById('add-row'));
+
+const currentItems = JSON.parse(localStorage.getItem('list-items')) || [];
+currentItems.push({ word: newWord, wordValue: input.value, circle1: parseFloat(circle1.getAttribute('data-value')), circle2: parseFloat(circle2.getAttribute('data-value')) });
+localStorage.setItem('list-items', JSON.stringify(currentItems));
+});
+listItem.appendChild(duplicateButton);
+
+document.getElementById('word-form').insertBefore(listItem, document.getElementById('add-row'));
+return listItem;
 }
+
+const storedItems = JSON.parse(localStorage.getItem('list-items')) || [];
+storedItems.forEach(item => {
+const listItem = createListItem(item.word, item.wordValue, item.circle1, item.circle2);
+updateCircleColor(listItem.querySelectorAll('.circle')[0], item.circle1);
+updateCircleColor(listItem.querySelectorAll('.circle')[1], item.circle2);
+});
+
+document.getElementById('add-row').addEventListener('click', function() {
+const wordName = `word-${document.querySelectorAll('.list-item').length + 1}`;
+const listItem = createListItem(wordName, '', 0, 0);
+
+const currentItems = JSON.parse(localStorage.getItem('list-items')) || [];
+currentItems.push({ word: wordName, wordValue: '', circle1: 0, circle2: 0 });
+localStorage.setItem('list-items', JSON.stringify(currentItems));
+
+listItem.querySelector('input').addEventListener('input', function() {
+const updatedItems = JSON.parse(localStorage.getItem('list-items')) || [];
+const currentItem = updatedItems.find(item => item.word === wordName);
+if (currentItem) currentItem.wordValue = this.value;
+localStorage.setItem('list-items', JSON.stringify(updatedItems));
+});
+
+listItem.querySelectorAll('.circle').forEach((circle, index) => {
 circle.addEventListener('click', function() {
-let value = parseFloat(this.getAttribute('data-value'));
-value = (value + 0.5) % 11; // Увеличение значения с шагом 0.5 до 10
-if (value > 10) value = 0; // Ограничение значения от 0 до 10
-this.setAttribute('data-value', value);
-localStorage.setItem(this.getAttribute('data-name'), value);
-updateCircleColor(this, value);
+const updatedItems = JSON.parse(localStorage.getItem('list-items')) || [];
+const currentItem = updatedItems.find(item => item.word === wordName);
+if (currentItem) {
+if (index === 0) currentItem.circle1 = parseFloat(this.getAttribute('data-value'));
+else currentItem.circle2 = parseFloat(this.getAttribute('data-value'));
+localStorage.setItem('list-items', JSON.stringify(updatedItems));
+}
+});
 });
 });
 });
