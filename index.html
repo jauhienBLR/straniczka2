@@ -56,42 +56,10 @@ background-color: green;
 </head>
 <body>
 <form id="word-form">
-<div class="list-item">
-<input type="text" placeholder="Введите слово" name="word1">
-<div class="circle" data-name="circle1-1" data-value="0"><span>0</span></div>
-<div class="circle" data-name="circle1-2" data-value="0"><span>0</span></div>
-<button type="button" class="delete-row">Удалить</button>
-<button type="button" class="duplicate-row">Дублировать</button>
-</div>
-<div class="list-item">
-<input type="text" placeholder="Введите слово" name="word2">
-<div class="circle" data-name="circle2-1" data-value="0"><span>0</span></div>
-<div class="circle" data-name="circle2-2" data-value="0"><span>0</span></div>
-<button type="button" class="delete-row">Удалить</button>
-<button type="button" class="duplicate-row">Дублировать</button>
-</div>
-<div class="list-item">
-<input type="text" placeholder="Введите слово" name="word3">
-<div class="circle" data-name="circle3-1" data-value="0"><span>0</span></div>
-<div class="circle" data-name="circle3-2" data-value="0"><span>0</span></div>
-<button type="button" class="delete-row">Удалить</button>
-<button type="button" class="duplicate-row">Дублировать</button>
-</div>
 <button type="button" id="add-row">Добавить строку</button>
 </form>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-const inputs = document.querySelectorAll('input[type="text"]');
-inputs.forEach(input => {
-const savedValue = localStorage.getItem(input.name);
-if (savedValue) {
-input.value = savedValue;
-}
-input.addEventListener('input', function() {
-localStorage.setItem(input.name, input.value);
-});
-});
-
 function updateCircleColor(circle, value) {
 const hue = 240 - (value * 24); // Градиент от синего (240) до красного (0)
 circle.style.backgroundColor = `hsl(${hue}, 100%, 50%)`;
